@@ -1,0 +1,111 @@
+-# coding: UTF-8
+
+.pager
+  %li.previous
+    %a{:href => "/admin/pictures/#{@per_page}/newer/#{@max}"} &laquo; Newer
+  %li.next
+    %a{:href => "/admin/pictures/#{@per_page}/older/#{@min}"} Older &raquo;
+
+.apple_overlay#overlay
+  .contentWrap
+
+.row
+  = "picture #{@min} - #{@max} of #{@total_picture_count}(#{@first} - #{@last})"
+
+-if @admin
+  - @pictures.each_slice(2).each_with_index do |pictures, row_idx|
+    .row{:id => [row_idx, 0]}
+      - pictures.each_with_index do |pic, idx|
+        .col-sm-6.col-md-4
+          .thumbnail
+            %img{:'data-src' => pic.access_url, :src => pic.access_url_resize(240, 360), :rel => "#overlay", :id => [pic.id]}
+
+          .caption
+            %h3
+              = pic.md5
+            %p
+              -IMGTAG_LIST.each_slice(4).each do |tags|
+                .btn-group.btn-group-lg
+                  -tags.each do |tag|
+                    -if pic.tags.include? tag
+                      %a.btn.btn-primary{:href => "/admin/picture/#{pic.id}/#{tag.id}/toggle_tag?__tag=#{pic.id}"}
+                        = "#{tag.name}"
+                    -else
+                      %a.btn.btn-default{:href => "/admin/picture/#{pic.id}/#{tag.id}/toggle_tag?__tag=#{pic.id}"}
+                        = "#{tag.name}"
+              .btn-group.btn-group-lg
+                %a.btn.btn-link{:href => "/admin/picture/#{pic.id}/blacklist?__tag=#{idx}_0"} 【删除】
+  
+            %p
+              %ul
+                - pic.posts[0..5].each do |post|
+                  %li{:id => ['post', post.id]}
+                    %img{:src => 'http://img3.douban.com/favicon.ico'}
+                    %a{:href => "#{post.author_url}"}
+                      = post.author
+                    %a{:href => "#{post.post_url}"}
+                      = post.title
+                      = post.pictures.nil? || "[#{post.pictures.count}]"
+                      = post.send_status
+                    - unless post.send_status == true
+                      %a.btn{:href => "/admin/post/#{post.post_id}/#{post.post_hash}/mail", :target => '_blank'} 发邮件
+
+-else
+  .row
+    - @pictures.each do |pic|
+      %img.thumbnail{:'data-src' => pic.access_url, :src => pic.access_url_resize, :rel => "#overlay"}
+
+  %hr
+
+.pager
+  %li.previous
+    %a{:href => "/admin/pictures/#{@per_page}/newer/#{@max}"} &laquo; Newer
+  %li.next
+    %a{:href => "/admin/pictures/#{@per_page}/older/#{@min}"} Older &raquo;
+
+:css
+  /* use a semi-transparent image for the overlay */
+  #overlay div.contentWrap img.popupimage {
+    max-width: 100%;
+    max-height: 92%;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    overflow: auto;
+    position: fixed;
+  }
+  .online {
+    color: red;
+  }
+  .offline {
+    color: gray;
+  }
+
+%script{:type => "text/javascript", :src  => "/js/jquery.tools.min.js"}
+:javascript
+  $(function() {
+    // if the function argument is given to overlay,
+    // it is assumed to be the onBeforeLoad event listener
+    $("img[rel]").overlay({
+      mask: 'darkgray',
+      effect: 'apple',
+      onBeforeLoad: function() {
+        // grab wrapper element inside content
+        var wrap = this.getOverlay().find(".contentWrap");
+        // load the page specified in the trigger
+        //wrap.load(this.getTrigger().attr("src"));
+        wrap.html("<img class='popupimage' src='" + this.getTrigger().attr("data-src") + "'>");
+      },
+      onLoad: function () {
+        $("body").css("overflow", "hidden");
+      },
+      onClose: function () {
+        $("body").css("overflow", "");
+      }
+    });
+    $("#overlay").click(function(){
+      $('#overlay a.close').trigger('click');
+    });
+  });
