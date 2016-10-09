@@ -1,0 +1,8 @@
+-# coding: UTF-8
+
+.row
+  %p.text-center
+    #{@post.author} 的帖子 #{@post.title}
+  %p.text-center
+    %a.btn{:href => '#', :onclick => "window.close();return false;"}
+      已发送！
